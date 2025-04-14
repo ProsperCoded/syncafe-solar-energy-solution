@@ -8,6 +8,7 @@ import { SolarPage } from '@/components/SolarPage';
 import { AnalyticsPage } from '@/components/AnalyticsPage';
 import { NotificationsPage } from '@/components/NotificationsPage';
 import { SettingsPage } from '@/components/SettingsPage';
+import { EnergySellPage } from '@/components/EnergySellPage';
 
 const Dashboard = () => {
   return (
@@ -20,6 +21,7 @@ const Dashboard = () => {
           <Route path="/devices" element={<DevicesPage />} />
           <Route path="/solar" element={<SolarPage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/sell" element={<EnergySellPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

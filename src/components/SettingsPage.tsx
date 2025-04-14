@@ -7,15 +7,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useForm } from 'react-hook-form';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { toast } from '@/components/ui/sonner';
-import { DollarSign, Sun, Zap, Bell, User, Shield, LogOut } from 'lucide-react';
+import { DollarSign, Sun, Zap, Bell, User, Shield, LogOut, Battery, Globe, Cog } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { DevicePrioritization } from '@/components/DevicePrioritization';
 
 export const SettingsPage = () => {
-  const { profile, updateProfile } = useEnergyData();
+  const { profile, updateProfile, batteryStorage } = useEnergyData();
   const [darkMode, setDarkMode] = useState(false);
   const navigate = useNavigate();
   
@@ -23,6 +25,8 @@ export const SettingsPage = () => {
     defaultValues: {
       gridRate: profile?.grid_rate || 0.15,
       saleRate: profile?.sale_rate || 0.10,
+      batteryEfficiency: profile?.battery_efficiency || 0.85,
+      currency: profile?.currency || 'USD',
     },
   });
   
@@ -31,14 +35,18 @@ export const SettingsPage = () => {
       form.reset({
         gridRate: profile.grid_rate,
         saleRate: profile.sale_rate,
+        batteryEfficiency: profile.battery_efficiency || 0.85,
+        currency: profile.currency || 'USD',
       });
     }
   }, [profile, form]);
   
-  const onSubmit = (data: { gridRate: number; saleRate: number }) => {
+  const onSubmit = (data: any) => {
     updateProfile.mutate({
       grid_rate: Number(data.gridRate),
       sale_rate: Number(data.saleRate),
+      battery_efficiency: Number(data.batteryEfficiency),
+      currency: data.currency,
     });
   };
 
@@ -58,9 +66,12 @@ export const SettingsPage = () => {
       <h1 className="text-3xl font-bold text-gray-800 mb-6">Settings</h1>
       
       <Tabs defaultValue="rates" className="space-y-6">
-        <TabsList className="grid grid-cols-5 w-full max-w-2xl mb-6">
+        <TabsList className="grid grid-cols-6 w-full max-w-3xl mb-6">
           <TabsTrigger value="rates" className="flex items-center">
             <DollarSign className="w-4 h-4 mr-2" /> Rates
+          </TabsTrigger>
+          <TabsTrigger value="battery" className="flex items-center">
+            <Battery className="w-4 h-4 mr-2" /> Battery
           </TabsTrigger>
           <TabsTrigger value="solar" className="flex items-center">
             <Sun className="w-4 h-4 mr-2" /> Solar
@@ -134,9 +145,114 @@ export const SettingsPage = () => {
                     )}
                   />
                   
+                  <FormField
+                    control={form.control}
+                    name="currency"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Currency</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select currency" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="USD">USD ($)</SelectItem>
+                            <SelectItem value="NGN">NGN (₦)</SelectItem>
+                            <SelectItem value="EUR">EUR (€)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+                  
                   <Button type="submit">Save Rate Settings</Button>
                 </form>
               </Form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="battery" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Battery Storage Configuration</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-medium mb-2">Current Battery Status</h3>
+                  <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Current Capacity:</span>
+                      <span className="font-medium">{batteryStorage.currentCapacity.toLocaleString()} W</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Maximum Capacity:</span>
+                      <span className="font-medium">{batteryStorage.maxCapacity.toLocaleString()} W</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Charging Status:</span>
+                      <span className={batteryStorage.isCharging ? "text-green-600 font-medium" : "text-gray-600"}>
+                        {batteryStorage.isCharging ? "Charging" : "Not Charging"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Charge Level:</span>
+                      <span className="font-medium">
+                        {Math.round((batteryStorage.currentCapacity / batteryStorage.maxCapacity) * 100)}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <FormField
+                  control={form.control}
+                  name="batteryEfficiency"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Battery Efficiency (0-1)</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <Battery className="h-4 w-4 text-gray-400" />
+                          </div>
+                          <Input 
+                            type="number" 
+                            step="0.01" 
+                            min="0.01" 
+                            max="1" 
+                            className="pl-10"
+                            {...field}
+                            onChange={e => field.onChange(parseFloat(e.target.value))}
+                          />
+                        </div>
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="pt-4">
+                  <Label htmlFor="maxCapacity">Maximum Battery Capacity (W)</Label>
+                  <Input 
+                    id="maxCapacity" 
+                    type="number" 
+                    defaultValue={batteryStorage.maxCapacity} 
+                    className="mt-1" 
+                  />
+                </div>
+                
+                <Button onClick={form.handleSubmit(onSubmit)}>Save Battery Settings</Button>
+                
+                <div className="flex items-center justify-between pt-4">
+                  <div>
+                    <h3 className="font-medium">Auto Power Management</h3>
+                    <p className="text-sm text-gray-500">Prioritize devices when battery is low</p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -181,6 +297,8 @@ export const SettingsPage = () => {
         </TabsContent>
         
         <TabsContent value="devices" className="space-y-6">
+          <DevicePrioritization />
+          
           <Card>
             <CardHeader>
               <CardTitle>Device Settings</CardTitle>
@@ -242,8 +360,16 @@ export const SettingsPage = () => {
                 
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-medium">Alerts</h3>
-                    <p className="text-sm text-gray-500">Get notified about critical issues</p>
+                    <h3 className="font-medium">Low Battery Alerts</h3>
+                    <p className="text-sm text-gray-500">Get notified when battery storage is low</p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-medium">Energy Transaction Alerts</h3>
+                    <p className="text-sm text-gray-500">Get notified about energy sales</p>
                   </div>
                   <Switch defaultChecked />
                 </div>

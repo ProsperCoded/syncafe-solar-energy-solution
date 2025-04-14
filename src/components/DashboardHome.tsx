@@ -8,7 +8,11 @@ import { PowerChart } from '@/components/PowerChart';
 import { DevicesList } from '@/components/DevicesList';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import { Clock, AlertCircle } from 'lucide-react';
+import { BatteryStorage } from '@/components/BatteryStorage';
+import { RealTimeUsage } from '@/components/RealTimeUsage';
+import { EnergyForecast } from '@/components/EnergyForecast';
 
 export const DashboardHome = () => {
   const { 
@@ -16,7 +20,8 @@ export const DashboardHome = () => {
     solarProduction, 
     powerBalance,
     financials,
-    devices
+    devices,
+    batteryStorage
   } = useEnergyData();
   
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -73,14 +78,14 @@ export const DashboardHome = () => {
         
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-gray-500">Power Balance</CardTitle>
+            <CardTitle className="text-sm text-gray-500">Battery Status</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${powerBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {powerBalance >= 0 ? '+' : ''}{powerBalance} W
+            <div className="text-2xl font-bold">
+              {batteryStorage.currentCapacity} W
             </div>
             <p className="text-xs text-gray-500">
-              {powerBalance >= 0 ? 'Surplus energy' : 'Energy deficit'}
+              {Math.round((batteryStorage.currentCapacity / batteryStorage.maxCapacity) * 100)}% capacity
             </p>
           </CardContent>
         </Card>
@@ -137,6 +142,20 @@ export const DashboardHome = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <BatteryStorage />
+            <RealTimeUsage />
+          </div>
+          
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Energy Forecast</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <EnergyForecast />
+            </CardContent>
+          </Card>
+          
           <DevicesList />
         </div>
         
@@ -166,6 +185,7 @@ export const DashboardHome = () => {
                 <p className="font-medium text-green-800">Energy Saving Tip</p>
                 <p className="text-green-700">Adjusting your thermostat by just 1°C can reduce energy consumption by up to 10%.</p>
               </div>
+              <Button variant="outline" className="w-full mt-2">View All Tips</Button>
             </CardContent>
           </Card>
         </div>

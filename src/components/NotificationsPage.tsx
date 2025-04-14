@@ -1,66 +1,35 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useEnergyData } from '@/hooks/useEnergyData';
+import { formatDistanceToNow } from 'date-fns';
 import { 
   Bell, AlertTriangle, CheckCircle, Info, AlertCircle, Clock, X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Toggle } from '@/components/ui/toggle';
 
-const notifications = [
-  {
-    id: 1,
-    type: 'warning',
-    title: 'High Power Consumption',
-    message: 'Your power consumption has exceeded your usual average by 20%.',
-    time: '2 hours ago',
-    read: false
-  },
-  {
-    id: 2,
-    type: 'success',
-    title: 'Energy Savings Achievement',
-    message: 'Congratulations! You saved $24.50 on your energy costs this week.',
-    time: '1 day ago',
-    read: false
-  },
-  {
-    id: 3,
-    type: 'info',
-    title: 'Solar Panel Efficiency',
-    message: 'Your solar panels are operating at 92% efficiency.',
-    time: '2 days ago',
-    read: true
-  },
-  {
-    id: 4,
-    type: 'alert',
-    title: 'Device Offline',
-    message: 'Your smart thermostat disconnected from the network.',
-    time: '3 days ago',
-    read: true
-  },
-  {
-    id: 5,
-    type: 'info',
-    title: 'Tip: Energy Saving',
-    message: 'Adjust your AC by 2 degrees to save up to 10% on cooling costs.',
-    time: '5 days ago',
-    read: true
-  }
-];
-
 export const NotificationsPage = () => {
-  const [activeNotifications, setActiveNotifications] = React.useState(notifications);
-  const unreadCount = activeNotifications.filter(n => !n.read).length;
+  const { notifications, markNotificationRead } = useEnergyData();
+  const [unreadOnly, setUnreadOnly] = useState(false);
+  
+  const displayNotifications = unreadOnly 
+    ? notifications.filter(n => !n.read)
+    : notifications;
+
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   const handleMarkAllRead = () => {
-    setActiveNotifications(activeNotifications.map(n => ({ ...n, read: true })));
+    notifications.forEach(notification => {
+      if (!notification.read) {
+        markNotificationRead.mutate(notification.id);
+      }
+    });
   };
 
-  const handleClearAll = () => {
-    setActiveNotifications([]);
+  const handleMarkRead = (id: string) => {
+    markNotificationRead.mutate(id);
   };
 
   const getNotificationIcon = (type: string) => {
@@ -71,7 +40,7 @@ export const NotificationsPage = () => {
         return <CheckCircle className="h-5 w-5 text-green-500" />;
       case 'info':
         return <Info className="h-5 w-5 text-blue-500" />;
-      case 'alert':
+      case 'error':
         return <AlertCircle className="h-5 w-5 text-red-500" />;
       default:
         return <Bell className="h-5 w-5 text-gray-500" />;
@@ -86,6 +55,14 @@ export const NotificationsPage = () => {
           <p className="text-gray-500">Stay updated on your energy system</p>
         </div>
         <div className="flex items-center space-x-3">
+          <Toggle 
+            pressed={unreadOnly} 
+            onPressedChange={setUnreadOnly}
+            aria-label="Show unread only"
+          >
+            <Bell className="h-4 w-4 mr-2" />
+            Unread only
+          </Toggle>
           {unreadCount > 0 && (
             <Button 
               variant="outline" 
@@ -95,13 +72,6 @@ export const NotificationsPage = () => {
               Mark all as read
             </Button>
           )}
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={handleClearAll}
-          >
-            Clear all
-          </Button>
         </div>
       </div>
       
@@ -110,7 +80,7 @@ export const NotificationsPage = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-wrap gap-4">
-              <Toggle aria-label="Toggle energy alerts">
+              <Toggle aria-label="Toggle energy alerts" defaultPressed>
                 <AlertTriangle className="h-4 w-4 mr-2" /> 
                 Energy Alerts
               </Toggle>
@@ -146,7 +116,7 @@ export const NotificationsPage = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {activeNotifications.length === 0 ? (
+          {displayNotifications.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <Bell className="mx-auto h-12 w-12 text-gray-400" />
               <h3 className="mt-2 text-sm font-semibold text-gray-900">No notifications</h3>
@@ -154,7 +124,7 @@ export const NotificationsPage = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {activeNotifications.map((notification) => (
+              {displayNotifications.map((notification) => (
                 <div 
                   key={notification.id}
                   className={`p-4 rounded-lg border flex items-start ${
@@ -172,14 +142,17 @@ export const NotificationsPage = () => {
                           <span className="inline-block w-2 h-2 ml-2 rounded-full bg-blue-500"></span>
                         )}
                       </h3>
-                      <button className="text-gray-400 hover:text-gray-500">
+                      <button 
+                        className="text-gray-400 hover:text-gray-500"
+                        onClick={() => handleMarkRead(notification.id)}
+                      >
                         <X className="h-4 w-4" />
                       </button>
                     </div>
                     <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
                     <div className="flex items-center mt-2 text-xs text-gray-500">
                       <Clock className="h-3 w-3 mr-1" />
-                      {notification.time}
+                      {formatDistanceToNow(new Date(notification.timestamp), { addSuffix: true })}
                     </div>
                   </div>
                 </div>
