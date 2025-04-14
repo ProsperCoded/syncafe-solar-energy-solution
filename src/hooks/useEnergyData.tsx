@@ -1,9 +1,8 @@
-
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/sonner';
-import { BatteryStorage, EnergyTransaction, EnergyNotification } from '@/types/energy';
+import { BatteryStorage, EnergyTransaction, EnergyNotification, Profile } from '@/types/energy';
 
 export interface Device {
   id: string;
@@ -17,14 +16,6 @@ export interface SolarData {
   id: string;
   production_amount: number;
   is_on: boolean;
-}
-
-export interface Profile {
-  grid_rate: number;
-  sale_rate: number;
-  battery_efficiency?: number;
-  currency?: string;
-  currencySymbol?: string;
 }
 
 export const useEnergyData = () => {
@@ -47,8 +38,7 @@ export const useEnergyData = () => {
       const { data, error } = await supabase
         .from('devices')
         .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: true });
+        .eq('user_id', user.id);
       
       if (error) throw error;
       return data as Device[];
@@ -84,21 +74,12 @@ export const useEnergyData = () => {
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('grid_rate, sale_rate, battery_efficiency, currency')
+        .select('*')
         .eq('id', user.id)
         .single();
       
       if (error) throw error;
-      
-      // Add currency symbol based on currency code
-      let currencySymbol = '$';
-      if (data.currency === 'NGN') currencySymbol = '₦';
-      else if (data.currency === 'EUR') currencySymbol = '€';
-      
-      return {
-        ...data, 
-        currencySymbol
-      } as Profile;
+      return data as Profile;
     }
   });
 
@@ -116,7 +97,7 @@ export const useEnergyData = () => {
         .order('timestamp', { ascending: false });
       
       if (error) throw error;
-      return data as EnergyTransaction[];
+      return data as unknown as EnergyTransaction[];
     }
   });
 
@@ -134,7 +115,7 @@ export const useEnergyData = () => {
         .order('timestamp', { ascending: false });
       
       if (error) throw error;
-      return data as EnergyNotification[];
+      return data as unknown as EnergyNotification[];
     }
   });
 
@@ -248,19 +229,18 @@ export const useEnergyData = () => {
   // Sell energy mutation
   const sellEnergy = useMutation({
     mutationFn: async ({ amount }: { amount: number }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
+      
       if (amount > batteryStorage.currentCapacity) {
         throw new Error("Not enough energy stored");
       }
-      
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No user found');
       
       // Calculate earnings based on sale rate
       const rate = profile?.sale_rate || 0.10;
       const earnings = (amount * rate) / 1000; // Convert watts to kWh
       
-      // Add transaction record
-      const { error: transactionError } = await supabase
+      const { error } = await supabase
         .from('energy_transactions')
         .insert([{
           user_id: user.id,
@@ -270,9 +250,9 @@ export const useEnergyData = () => {
           timestamp: new Date().toISOString()
         }]);
       
-      if (transactionError) throw transactionError;
+      if (error) throw error;
       
-      // Update battery storage by subtracting sold amount
+      // Update battery storage
       setBatteryStorage(prev => ({
         ...prev,
         currentCapacity: Math.max(0, prev.currentCapacity - amount)
@@ -282,11 +262,11 @@ export const useEnergyData = () => {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      toast.success(`Successfully sold ${data.amount}W for ${profile?.currencySymbol || '$'}${data.earnings.toFixed(2)}`);
+      toast.success(`Successfully sold ${data.amount}W for ${profile?.currency_symbol || '$'}${data.earnings.toFixed(2)}`);
       addNotification.mutate({
         type: 'success',
         title: 'Energy Sold',
-        message: `Sold ${data.amount}W for ${profile?.currencySymbol || '$'}${data.earnings.toFixed(2)}`
+        message: `Sold ${data.amount}W for ${profile?.currency_symbol || '$'}${data.earnings.toFixed(2)}`
       });
     }
   });
@@ -300,8 +280,8 @@ export const useEnergyData = () => {
       const { error } = await supabase
         .from('notifications')
         .insert([{
-          ...notification,
           user_id: user.id,
+          ...notification,
           timestamp: new Date().toISOString(),
           read: false
         }]);

@@ -1,4 +1,3 @@
-
 export interface BatteryStorage {
   currentCapacity: number;      // Current stored energy in watts
   maxCapacity: number;          // Maximum storage capacity in watts
@@ -37,4 +36,14 @@ export interface EnergyNotification {
 export interface DevicePriority {
   deviceId: string;
   priority: number;             // 1 = highest priority (last to turn off)
+}
+
+export interface Profile {
+  id: string;
+  full_name: string | null;
+  grid_rate: number;
+  sale_rate: number;
+  battery_efficiency: number;
+  currency: 'USD' | 'NGN' | 'EUR';
+  currency_symbol: '$' | '₦' | '€';
 }

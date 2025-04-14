@@ -39,8 +39,68 @@ export type Database = {
         }
         Relationships: []
       }
+      energy_transactions: {
+        Row: {
+          amount: number
+          earnings: number
+          id: string
+          rate: number
+          timestamp: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          earnings: number
+          id?: string
+          rate: number
+          timestamp?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          earnings?: number
+          id?: string
+          rate?: number
+          timestamp?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          id: string
+          message: string
+          read: boolean
+          timestamp: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          message: string
+          read?: boolean
+          timestamp?: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          message?: string
+          read?: boolean
+          timestamp?: string
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
+          battery_efficiency: number | null
+          currency: string | null
+          currency_symbol: string | null
           full_name: string | null
           grid_rate: number | null
           id: string
@@ -48,6 +108,9 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          battery_efficiency?: number | null
+          currency?: string | null
+          currency_symbol?: string | null
           full_name?: string | null
           grid_rate?: number | null
           id: string
@@ -55,6 +118,9 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          battery_efficiency?: number | null
+          currency?: string | null
+          currency_symbol?: string | null
           full_name?: string | null
           grid_rate?: number | null
           id?: string
