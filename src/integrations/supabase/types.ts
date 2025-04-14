@@ -9,7 +9,87 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      devices: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_on: boolean | null
+          name: string
+          power_usage: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_on?: boolean | null
+          name: string
+          power_usage: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_on?: boolean | null
+          name?: string
+          power_usage?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          full_name: string | null
+          grid_rate: number | null
+          id: string
+          sale_rate: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          full_name?: string | null
+          grid_rate?: number | null
+          id: string
+          sale_rate?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          full_name?: string | null
+          grid_rate?: number | null
+          id?: string
+          sale_rate?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      solar_data: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_on: boolean | null
+          production_amount: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_on?: boolean | null
+          production_amount: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_on?: boolean | null
+          production_amount?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
