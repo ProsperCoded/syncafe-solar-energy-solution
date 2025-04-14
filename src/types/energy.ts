@@ -4,6 +4,7 @@ export interface BatteryStorage {
   maxCapacity: number;          // Maximum storage capacity in watts
   efficiency: number;           // Battery charging efficiency (0-1)
   lastUpdated: Date;            // Last time battery was updated
+  isCharging?: boolean;         // Whether the battery is currently charging
 }
 
 export interface EnergySettings {

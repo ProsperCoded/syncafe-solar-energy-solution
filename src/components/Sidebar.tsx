@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import {
   ChevronLeft,
@@ -11,7 +11,7 @@ import {
   LayoutDashboard,
   Settings,
   Bell,
-  Devices,
+  Smartphone,
   SunMedium,
   CircleDollarSign,
   Menu
@@ -19,7 +19,7 @@ import {
 
 export const Sidebar = () => {
   const location = useLocation();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const [collapsed, setCollapsed] = useState(isMobile);
   const [mobileOpen, setMobileOpen] = useState(false);
   
@@ -35,7 +35,7 @@ export const Sidebar = () => {
     },
     {
       name: "Devices",
-      icon: <Devices className="h-5 w-5" />,
+      icon: <Smartphone className="h-5 w-5" />,
       path: "/dashboard/devices",
       active: activePath === "devices",
     },
