@@ -72,9 +72,12 @@ export const useEnergyData = () => {
 
   const addDevice = useMutation({
     mutationFn: async (device: Omit<Device, 'id' | 'is_on'>) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
+
       const { error } = await supabase
         .from('devices')
-        .insert([{ ...device, is_on: false }]);
+        .insert([{ ...device, is_on: false, user_id: user.id }]);
       
       if (error) throw error;
     },
@@ -100,9 +103,12 @@ export const useEnergyData = () => {
 
   const updateSolarData = useMutation({
     mutationFn: async (data: Omit<SolarData, 'id'>) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
+
       const { error } = await supabase
         .from('solar_data')
-        .upsert([data]);
+        .upsert([{ ...data, user_id: user.id }]);
       
       if (error) throw error;
     },
