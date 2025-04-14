@@ -1,73 +1,172 @@
-# Welcome to your Lovable project
+# Syncafe Solar Energy Management System
 
-## Project info
+## Overview
 
-**URL**: https://lovable.dev/projects/29d1764b-0ceb-4859-86b4-04af5d08f1f0
+Syncafe Solar Energy Management System is an interactive web application that helps users visualize, monitor, and optimize their solar energy production, consumption, and storage. The application provides real-time data visualization, energy analytics, and smart recommendations to maximize the benefits of solar energy systems.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+### Real-time Energy Monitoring
 
-**Use Lovable**
+- **Solar Production Tracking**: Monitor real-time solar energy production
+- **Device Power Consumption**: Track power usage across all connected devices
+- **Battery Storage Management**: Visualize battery charge/discharge status and capacity
+- **Power Balance Visualization**: See the balance between energy production and consumption
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/29d1764b-0ceb-4859-86b4-04af5d08f1f0) and start prompting.
+### Weather Simulation
 
-Changes made via Lovable will be committed automatically to this repo.
+- Simulate different weather conditions (sunny, partly cloudy, rainy, stormy)
+- Visualize the impact of weather on solar energy production
+- Adaptive efficiency calculations based on weather conditions
 
-**Use your preferred IDE**
+### Advanced Analytics
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- **Time-based Analytics**: View energy data across different timeframes (day, week, month, year)
+- **Financial Impact**: Calculate savings, earnings and cost metrics
+- **Energy Distribution**: Visualize power usage distribution across devices
+- **Sustainability Metrics**: Track carbon offset and environmental impact
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Energy Market
 
-Follow these steps:
+- Sell excess energy back to the grid
+- Track earnings from energy sales
+- View transaction history and financial insights
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Smart Device Management
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+- Add and manage connected devices
+- Set device priorities for power management
+- Toggle devices on/off to optimize energy usage
 
-# Step 3: Install the necessary dependencies.
-npm i
+### Optimization Recommendations
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+- Receive personalized recommendations to optimize energy usage
+- Get alerts for critical battery levels and system status
+- Adaptive tips based on current energy production and consumption patterns
+
+### User Preferences
+
+- Customize energy rates and pricing
+- Set battery efficiency parameters
+- Configure notification preferences
+
+## Technical Features
+
+- **Persistent Battery Storage**: Battery levels are saved across sessions
+- **Optimized Database Synchronization**: Local state with periodic database updates
+- **Real-time Simulation**: Solar energy and battery charge/discharge simulation
+- **Responsive Design**: Fully responsive interface for all device sizes
+
+## Technologies
+
+- **Frontend**: React, TypeScript, TailwindCSS
+- **State Management**: React Query, React Context
+- **Database**: Supabase
+- **Authentication**: Supabase Auth
+- **Visualization**: Recharts
+
+## Installation
+
+### Prerequisites
+
+- Node.js (version 16 or higher)
+- pnpm or npm
+
+### Setup
+
+1. Clone the repository
+
+   ```bash
+   git clone https://github.com/your-username/solar-energy-balance-visualizer.git
+   cd solar-energy-balance-visualizer
+   ```
+
+2. Install dependencies
+
+   ```bash
+   pnpm install
+   # or
+   npm install
+   ```
+
+3. Set up environment variables
+   Create a `.env` file in the root directory with the following variables:
+
+   ```
+   VITE_SUPABASE_URL=your_supabase_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+
+4. Run the development server
+
+   ```bash
+   pnpm dev
+   # or
+   npm run dev
+   ```
+
+## Database Setup
+
+This application requires a Supabase project with the following tables:
+
+- `profiles`
+- `devices`
+- `solar_data`
+- `battery_storage`
+- `energy_transactions`
+- `notifications`
+
+To set up the database schema, run the migrations in the `supabase/migrations` directory:
+
+```bash
+cd supabase
+supabase migration up
 ```
 
-**Edit a file directly in GitHub**
+## Usage
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Authentication
 
-**Use GitHub Codespaces**
+- Register a new account or log in with existing credentials
+- User data is securely stored in Supabase
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Dashboard
 
-## What technologies are used for this project?
+- The main dashboard provides an overview of your energy system
+- Real-time updates of power production, consumption, and storage
+- Quick access to device control and energy statistics
 
-This project is built with:
+### Simulation
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- Use the Solar page to simulate different weather conditions
+- Toggle solar production on/off
+- Adjust production levels
 
-## How can I deploy this project?
+### Analytics
 
-Simply open [Lovable](https://lovable.dev/projects/29d1764b-0ceb-4859-86b4-04af5d08f1f0) and click on Share -> Publish.
+- Access detailed analytics from the Analytics page
+- Export reports for external analysis
+- View historical data and projections
 
-## Can I connect a custom domain to my Lovable project?
+## Contributing
 
-Yes, you can!
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgements
+
+- [React](https://reactjs.org/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [TailwindCSS](https://tailwindcss.com/)
+- [Supabase](https://supabase.io/)
+- [Recharts](https://recharts.org/)
+- [Lucide Icons](https://lucide.dev/)

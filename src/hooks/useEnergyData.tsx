@@ -336,7 +336,8 @@ export const useEnergyData = () => {
     },
   });
 
-  // Sell energy mutation
+  // Optimize the sell energy mutation to only update local state first,
+  // and let the sync interval handle the database update
   const sellEnergy = useMutation({
     mutationFn: async ({ amount }: { amount: number }) => {
       const {
@@ -364,7 +365,7 @@ export const useEnergyData = () => {
 
       if (error) throw error;
 
-      // Update battery storage
+      // Update battery storage locally
       setBatteryStorage((prev) => ({
         ...prev,
         currentCapacity: Math.max(0, prev.currentCapacity - amount),
@@ -435,7 +436,7 @@ export const useEnergyData = () => {
 
   // Battery simulation logic
   useEffect(() => {
-    const intervalId = setInterval(() => {
+    const simulationIntervalId = setInterval(() => {
       setBatteryStorage((prev) => {
         const now = new Date();
         const secondsElapsed =
@@ -519,14 +520,6 @@ export const useEnergyData = () => {
           }
         }
 
-        // Update battery storage in database
-        updateBatteryStorage.mutate({
-          current_capacity: newCapacity,
-          max_capacity: prev.maxCapacity,
-          efficiency: prev.efficiency,
-          is_charging: isCharging,
-        });
-
         return {
           ...prev,
           currentCapacity: newCapacity,
@@ -536,8 +529,60 @@ export const useEnergyData = () => {
       });
     }, 1000);
 
-    return () => clearInterval(intervalId);
+    // Create a separate interval for database syncing (every 5 seconds)
+    const syncIntervalId = setInterval(() => {
+      // Get current battery state and sync to database
+      const currentBattery = batteryStorage;
+
+      // Only update if we have valid data
+      if (currentBattery.currentCapacity >= 0) {
+        updateBatteryStorage.mutate({
+          current_capacity: currentBattery.currentCapacity,
+          max_capacity: currentBattery.maxCapacity,
+          efficiency: currentBattery.efficiency,
+          is_charging: currentBattery.isCharging,
+        });
+      }
+    }, 5000);
+
+    return () => {
+      clearInterval(simulationIntervalId);
+      clearInterval(syncIntervalId);
+    };
   }, [devices, solarData, profile]);
+
+  // Event listeners for page visibility to sync before user leaves
+  useEffect(() => {
+    // Function to sync battery data immediately
+    const syncBatteryData = () => {
+      updateBatteryStorage.mutate({
+        current_capacity: batteryStorage.currentCapacity,
+        max_capacity: batteryStorage.maxCapacity,
+        efficiency: batteryStorage.efficiency,
+        is_charging: batteryStorage.isCharging,
+      });
+    };
+
+    // Sync when user is about to leave the page
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        syncBatteryData();
+      }
+    };
+
+    // Sync before unload (user closes tab/window)
+    const handleBeforeUnload = () => {
+      syncBatteryData();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [batteryStorage]);
 
   // Calculate totals
   const activeDevicesPower = devices
