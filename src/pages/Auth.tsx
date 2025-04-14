@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -20,51 +19,45 @@ const Auth = () => {
     e.preventDefault();
 
     try {
-      switch (mode) {
-        case 'login':
-          const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
-          if (loginError) {
-            toast.error('Login failed', { description: loginError.message });
-            return;
-          }
-          toast.success('Logged in successfully');
-          navigate('/dashboard');
-          break;
-
-        case 'register':
-          const { error: registerError } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-              data: {
-                full_name: fullName
-              }
+      if (mode === 'login') {
+        const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+        if (loginError) {
+          toast.error('Login failed', { description: loginError.message });
+          return;
+        }
+        toast.success('Logged in successfully');
+        navigate('/dashboard');
+      } else if (mode === 'register') {
+        const { error: registerError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: fullName
             }
-          });
-          
-          if (registerError) {
-            toast.error('Registration failed', { description: registerError.message });
-            return;
           }
-          
-          toast.success('Registration successful', {
-            description: 'Please check your email to verify your account'
-          });
-          setMode('login');
-          break;
-
-        case 'reset':
-          const { error: resetError } = await supabase.auth.resetPasswordForEmail(email);
-          
-          if (resetError) {
-            toast.error('Password reset failed', { description: resetError.message });
-            return;
-          }
-          
-          toast.success('Password reset email sent', {
-            description: 'Check your email to reset your password'
-          });
-          break;
+        });
+        
+        if (registerError) {
+          toast.error('Registration failed', { description: registerError.message });
+          return;
+        }
+        
+        toast.success('Registration successful', {
+          description: 'Please check your email to verify your account'
+        });
+        setMode('login');
+      } else if (mode === 'reset') {
+        const { error: resetError } = await supabase.auth.resetPasswordForEmail(email);
+        
+        if (resetError) {
+          toast.error('Password reset failed', { description: resetError.message });
+          return;
+        }
+        
+        toast.success('Password reset email sent', {
+          description: 'Check your email to reset your password'
+        });
       }
     } catch (err) {
       console.error('Authentication error:', err);
