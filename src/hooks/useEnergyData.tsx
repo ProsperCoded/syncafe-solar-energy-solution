@@ -9,6 +9,7 @@ import {
   EnergyNotification,
   Profile,
 } from "@/types/energy";
+import { useAuth } from "./useAuth";
 
 export interface Device {
   id: string;
@@ -25,6 +26,7 @@ export interface SolarData {
 }
 
 export const useEnergyData = () => {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [batteryStorage, setBatteryStorage] = useState<
     BatteryStorage & { isCharging: boolean }
@@ -36,13 +38,19 @@ export const useEnergyData = () => {
     isCharging: false,
   });
 
+  // Common React Query config for better performance
+  const queryConfig = {
+    staleTime: 5000, // Data remains fresh for 5 seconds
+    cacheTime: 10 * 60 * 1000, // Cache data for 10 minutes
+    refetchInterval: 5000, // Only refetch every 5 seconds
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    enabled: !!user, // Only run queries if user is authenticated
+  };
+
   // Get battery storage data
   const { data: batteryData, isLoading: isBatteryLoading } = useQuery({
-    queryKey: ["battery_storage"],
+    queryKey: ["battery_storage", user?.id],
     queryFn: async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
       const { data, error } = await supabase
@@ -78,15 +86,12 @@ export const useEnergyData = () => {
 
       return data as BatteryStorageDB;
     },
-    retry: 1,
+    ...queryConfig,
   });
 
   // Update battery in database
   const updateBatteryStorage = useMutation({
     mutationFn: async (batteryData: Partial<BatteryStorageDB>) => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
       const { error } = await supabase
@@ -98,6 +103,43 @@ export const useEnergyData = () => {
         .eq("user_id", user.id);
 
       if (error) throw error;
+    },
+  });
+
+  // Update battery settings like max capacity
+  const updateBatterySettings = useMutation({
+    mutationFn: async ({
+      maxCapacity,
+      efficiency,
+    }: {
+      maxCapacity: number;
+      efficiency: number;
+    }) => {
+      if (!user) throw new Error("No user found");
+
+      const { error } = await supabase
+        .from("battery_storage")
+        .update({
+          max_capacity: maxCapacity,
+          efficiency: efficiency,
+          last_updated: new Date().toISOString(),
+        })
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setBatteryStorage((prev) => ({
+        ...prev,
+        maxCapacity,
+        efficiency,
+      }));
+
+      return { maxCapacity, efficiency };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["battery_storage"] });
+      toast.success("Battery settings updated successfully");
     },
   });
 
@@ -116,11 +158,8 @@ export const useEnergyData = () => {
 
   // Get devices
   const { data: devices = [] } = useQuery({
-    queryKey: ["devices"],
+    queryKey: ["devices", user?.id],
     queryFn: async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
       const { data, error } = await supabase
@@ -131,15 +170,13 @@ export const useEnergyData = () => {
       if (error) throw error;
       return data as Device[];
     },
+    ...queryConfig,
   });
 
   // Get solar data
   const { data: solarData } = useQuery({
-    queryKey: ["solar_data"],
+    queryKey: ["solar_data", user?.id],
     queryFn: async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
       const { data, error } = await supabase
@@ -153,15 +190,13 @@ export const useEnergyData = () => {
       if (error && error.code !== "PGRST116") return null;
       return data as SolarData;
     },
+    ...queryConfig,
   });
 
   // Get profile (including energy rates)
   const { data: profile } = useQuery({
-    queryKey: ["profile"],
+    queryKey: ["profile", user?.id],
     queryFn: async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
       const { data, error } = await supabase
@@ -173,15 +208,13 @@ export const useEnergyData = () => {
       if (error) throw error;
       return data as Profile;
     },
+    ...queryConfig,
   });
 
   // Get energy transactions
   const { data: transactions = [] } = useQuery({
-    queryKey: ["transactions"],
+    queryKey: ["transactions", user?.id],
     queryFn: async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
       const { data, error } = await supabase
@@ -193,15 +226,13 @@ export const useEnergyData = () => {
       if (error) throw error;
       return data as unknown as EnergyTransaction[];
     },
+    ...queryConfig,
   });
 
   // Get notifications
   const { data: notifications = [] } = useQuery({
-    queryKey: ["notifications"],
+    queryKey: ["notifications", user?.id],
     queryFn: async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
       const { data, error } = await supabase
@@ -213,14 +244,12 @@ export const useEnergyData = () => {
       if (error) throw error;
       return data as unknown as EnergyNotification[];
     },
+    ...queryConfig,
   });
 
   // Add device mutation
   const addDevice = useMutation({
     mutationFn: async (device: Omit<Device, "id" | "is_on">) => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
       const { error } = await supabase
@@ -288,9 +317,6 @@ export const useEnergyData = () => {
   // Update solar data mutation
   const updateSolarData = useMutation({
     mutationFn: async (data: Omit<SolarData, "id">) => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
       const { error } = await supabase
@@ -313,9 +339,6 @@ export const useEnergyData = () => {
   // Update profile mutation
   const updateProfile = useMutation({
     mutationFn: async (rates: Partial<Profile>) => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
       const { error } = await supabase
@@ -340,9 +363,6 @@ export const useEnergyData = () => {
   // and let the sync interval handle the database update
   const sellEnergy = useMutation({
     mutationFn: async ({ amount }: { amount: number }) => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
       if (amount > batteryStorage.currentCapacity) {
@@ -398,9 +418,6 @@ export const useEnergyData = () => {
         "id" | "userId" | "timestamp" | "read"
       >
     ) => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
       const { error } = await supabase.from("notifications").insert([
@@ -534,8 +551,8 @@ export const useEnergyData = () => {
       // Get current battery state and sync to database
       const currentBattery = batteryStorage;
 
-      // Only update if we have valid data
-      if (currentBattery.currentCapacity >= 0) {
+      // Only update if we have valid data and user is authenticated
+      if (currentBattery.currentCapacity >= 0 && user) {
         updateBatteryStorage.mutate({
           current_capacity: currentBattery.currentCapacity,
           max_capacity: currentBattery.maxCapacity,
@@ -549,12 +566,14 @@ export const useEnergyData = () => {
       clearInterval(simulationIntervalId);
       clearInterval(syncIntervalId);
     };
-  }, [devices, solarData, profile]);
+  }, [devices, solarData, profile, user]);
 
   // Event listeners for page visibility to sync before user leaves
   useEffect(() => {
     // Function to sync battery data immediately
     const syncBatteryData = () => {
+      if (!user) return;
+
       updateBatteryStorage.mutate({
         current_capacity: batteryStorage.currentCapacity,
         max_capacity: batteryStorage.maxCapacity,
@@ -582,7 +601,7 @@ export const useEnergyData = () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [batteryStorage]);
+  }, [batteryStorage, user]);
 
   // Calculate totals
   const activeDevicesPower = devices
@@ -614,6 +633,7 @@ export const useEnergyData = () => {
     updateSolarData,
     updateProfile,
     updateDevicePriorities,
+    updateBatterySettings,
     sellEnergy,
     transactions,
     notifications,

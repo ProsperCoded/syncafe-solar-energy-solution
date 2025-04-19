@@ -1,20 +1,19 @@
-
-import React from 'react';
-import { useNavigate, Routes, Route, Navigate } from 'react-router-dom';
-import { Sidebar } from '@/components/Sidebar';
-import { DashboardHome } from '@/components/DashboardHome';
-import { DevicesPage } from '@/components/DevicesPage';
-import { SolarPage } from '@/components/SolarPage';
-import { AnalyticsPage } from '@/components/AnalyticsPage';
-import { NotificationsPage } from '@/components/NotificationsPage';
-import { SettingsPage } from '@/components/SettingsPage';
-import { EnergySellPage } from '@/components/EnergySellPage';
+import React from "react";
+import { useNavigate, Routes, Route, Navigate } from "react-router-dom";
+import { Sidebar } from "@/components/Sidebar";
+import { DashboardHome } from "@/components/DashboardHome";
+import { DevicesPage } from "@/components/DevicesPage";
+import { SolarPage } from "@/components/SolarPage";
+import { AnalyticsPage } from "@/components/AnalyticsPage";
+import { NotificationsPage } from "@/components/NotificationsPage";
+import { SettingsPage } from "@/components/SettingsPage";
+import { EnergySellPage } from "@/components/EnergySellPage";
 
 const Dashboard = () => {
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex bg-gray-100 h-screen">
       <Sidebar />
-      
+
       <div className="flex-1 overflow-auto">
         <Routes>
           <Route path="/" element={<DashboardHome />} />
